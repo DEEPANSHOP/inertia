@@ -156,18 +156,18 @@
     <div id="home-view" class="page-view active">
         <div class="glass-panel side-panel">
             <h3 style="margin-bottom: 15px; font-weight: 300; letter-spacing: 1px; color: #fff;">LATEST</h3>
-            <iframe style="border-radius:12px; margin-bottom: 15px;" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX0XUsuxWHRQd?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/2FsVo8L1FRNUSab69KvjbJ?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
             <p style="font-size: 0.8rem; color: #aaa; line-height: 1.4;">Stream the newest drops and underground anthems directly from the inertia catalog.</p>
         </div>
 
         <div class="glass-panel center-panel">
-            <img src="1000159127.webp" alt="inertia Logo" class="logo">
+            <img src="logo.webp" alt="inertia Logo" class="logo">
             <h1>inertia</h1>
             <h2>BY ARTISTS, FOR ARTISTS</h2>
             
             <div class="action-buttons">
                 <button class="explore-btn" onclick="switchPage('releases')">Explore</button>
-                <a href="YOUR_DISCORD_LINK_HERE" target="_blank" class="discord-btn">Join Discord</a>
+                <a href="https://discord.gg/xnQ3ej7zWZ" target="_blank" class="discord-btn">Join Discord</a>
             </div>
         </div>
 
@@ -183,7 +183,7 @@
     <div id="about-view" class="page-view">
         <div class="about-container">
             <div class="glass-panel about-card">
-                <img src="1000159127.webp" alt="inertia Logo" style="width: 80px; margin-bottom: 20px; mix-blend-mode: screen;">
+                <img src="logo.webp" alt="inertia Logo" style="width: 80px; margin-bottom: 20px; mix-blend-mode: screen;">
                 <h3>The Future of Sound</h3>
                 <p class="about-text">
                     <strong>inertia</strong> is a multi-genre imprint dedicated to the rawest sounds of the underground. 
@@ -220,7 +220,7 @@
 
     <div id="demo-view" class="page-view">
         <div class="glass-panel submission-container">
-            <div class="ticker-wrap"><div class="ticker">/// SUBMISSIONS CURRENTLY OPEN /// DROP YOUR HEAVIEST CUTS /// inertia HQ ///</div></div>
+            <div class="ticker-wrap"><div class="ticker">/// SUBMISSIONS CURRENTLY OPEN /// DROP YOUR HEAVIEST CUTS /// inertia ///</div></div>
             <div class="form-content">
                 <h2>DEMO SUBMISSION</h2>
                 
@@ -255,7 +255,6 @@
     
         <script>
         const spotifyLinks = [
-            "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT", 
             "https://open.spotify.com/track/6Hab0CG9TFIyPEcrpPStCs", 
             "https://open.spotify.com/album/4mG2cABk2LofS4A3b0kIuL"  
         ];
@@ -357,7 +356,7 @@
             const link = document.getElementById('demoLink').value;
             const message = document.getElementById('demoMessage').value;
 
-            const labelEmail = "demos@yourdomain.com"; 
+            const labelEmail = "demo@inertia.cv"; 
 
             const subject = encodeURIComponent(`inertia Demo: ${name} - ${genre}`);
             const bodyText = `Artist Name: ${name}\nContact Email: ${email}\nGenre: ${genre}\n\nPrivate Link:\n${link}\n\nMessage:\n${message}\n\n---\nGenerated via inertia website portal`;
