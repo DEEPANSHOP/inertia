@@ -9,6 +9,34 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, sans-serif; }
         body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; width: 100vw; }
 
+                /* === CUSTOM DARK SCROLLBAR === */
+        /* For Firefox */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) #0a0a0a;
+        }
+
+        /* For Chrome, Edge, and Safari */
+        ::-webkit-scrollbar {
+            width: 8px; /* Makes the scrollbar sleek and thin */
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a; /* Dark background to blend with the space theme */
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2); /* Frosted glass look */
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4); /* Brightens when you hover over it */
+        }
+        
+
         /* === OUTER SPACE CANVAS BACKGROUND === */
         #space { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
@@ -38,7 +66,7 @@
         .nav-btn:hover, .nav-btn.active { background: rgba(255, 255, 255, 0.3); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
 
         /* === PAGE ROUTING === */
-        .page-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .page-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; overflow-y: auto; }
         .page-view.active { opacity: 1; pointer-events: auto; }
 
         /* === HOME PAGE LAYOUT === */
@@ -49,7 +77,6 @@
         .logo { width: 150px; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)); animation: float 4s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
 
-        /* Lowercase title styling applied here */
         h1 { font-size: 3rem; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; text-transform: lowercase; }
         h2 { font-size: 1rem; font-weight: 300; letter-spacing: 4px; color: #aaa; margin-bottom: 30px; text-transform: uppercase;}
         
@@ -69,6 +96,65 @@
         input, textarea { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 8px; color: #555; outline: none; cursor: not-allowed; font-family: inherit; }
         textarea { resize: none; height: 100px; }
         .locked-btn { width: 100%; padding: 15px; margin-top: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #555; border-radius: 8px; text-transform: uppercase; letter-spacing: 2px; cursor: not-allowed; }
+
+        /* === MOBILE RESPONSIVE DESIGN === */
+        /* This section overrides the desktop rules when viewed on a smaller screen */
+        @media (max-width: 768px) {
+            nav {
+                width: 90%;
+                flex-wrap: wrap; /* Allows buttons to wrap to a second line */
+                justify-content: center;
+                top: 15px;
+                gap: 8px;
+            }
+            
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.7rem;
+            }
+
+            .page-view {
+                align-items: flex-start; /* Pushes content to the top so it can be scrolled */
+                padding-top: 120px;
+                padding-bottom: 40px;
+            }
+
+            #home-view {
+                flex-direction: column; /* Stacks panels vertically */
+                align-items: center;
+                padding: 120px 20px 40px 20px;
+                gap: 20px;
+            }
+
+            .center-panel, .side-panel {
+                width: 100%; /* Make panels take full screen width */
+                height: auto;
+                margin-top: 0;
+            }
+
+            .center-panel {
+                padding: 40px 20px;
+                order: -1; /* Forces the main logo panel to the top on mobile */
+            }
+
+            h1 {
+                font-size: 2.2rem; /* Scales text down for smaller screens */
+            }
+
+            .submission-container {
+                width: 90%;
+                margin: 0 auto;
+            }
+
+            .form-content {
+                padding: 20px;
+            }
+
+            .form-row {
+                flex-direction: column; /* Stacks inputs vertically */
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -91,7 +177,7 @@
         </div>
 
         <div class="glass-panel center-panel">
-            <img src="IMG_20260218_104410_114.webp" alt="inertia Logo" class="logo">
+            <img src="logo.webp" alt="inertia Logo" class="logo">
             <h1>inertia</h1>
             <h2>BY ARTISTS, FOR ARTISTS</h2>
             <button class="explore-btn">Explore</button>
@@ -140,6 +226,9 @@
                 document.getElementById('demo-view').classList.add('active');
                 btns[4].classList.add('active');
             }
+            
+            // Auto-scroll to top when switching pages on mobile
+            document.getElementById(page + '-view').scrollTop = 0;
         }
 
         const canvas = document.getElementById("space");
@@ -197,5 +286,4 @@
         animate();
     </script>
 </body>
-  </html>
-
+</html>
