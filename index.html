@@ -347,8 +347,8 @@
 
             const labelEmail = "demo@inertia.cv"; 
 
-            const subject = encodeURIComponent(`inertia Demo: ${name} - ${genre}`);
-            const bodyText = `Artist Name: ${name}\nContact Email: ${email}\nGenre: ${genre}\n\nPrivate Link:\n${link}\n\nMessage:\n${message}\n\n---\nGenerated via inertia website portal`;
+            const subject = encodeURIComponent(`DEMO: ${name} - ${genre}`);
+            const bodyText = `Artist Name: ${name}\nContact Email: ${email}\nGenre: ${genre}\n\nPrivate Link:\n${link}\n\nMessage:\n${message}\n\n---\ninertia`;
             const body = encodeURIComponent(bodyText);
 
             window.location.href = `mailto:${labelEmail}?subject=${subject}&body=${body}`;
