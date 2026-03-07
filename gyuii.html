@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>inertia | By Artists, For Artists</title>
+    <style>
+        /* === BASE SETTINGS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, sans-serif; }
+        body, html { background-color: #000; color: #fff; overflow-x: hidden; height: 100%; width: 100%; }
+
+        html { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) #0a0a0a; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; transition: background 0.3s ease; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+        #space { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+        .glass-panel {
+            position: relative; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); transition: all 0.4s ease; z-index: 1; 
+            max-width: 100%;
+        }
+        .glass-panel::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: inherit; z-index: -1; transition: all 0.4s ease;
+        }
+        .glass-panel:hover { border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 8px 32px 0 rgba(255, 255, 255, 0.05); }
+
+        nav { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; max-width: 95vw; flex-wrap: wrap; justify-content: center; }
+        .nav-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem; transition: 0.3s; white-space: nowrap; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255, 255, 255, 0.3); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+
+        .page-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; overflow-y: auto; overflow-x: hidden; z-index: 10; }
+        .page-view.active { opacity: 1; pointer-events: auto; }
+
+        #home-view { display: flex; justify-content: center; align-items: stretch; gap: 30px; padding: 120px 30px 50px 30px; min-height: 100%; }
+        .side-panel { width: 280px; height: auto; min-height: 60vh; margin-top: 5vh; padding: 25px; display: flex; flex-direction: column; }
+        .center-panel { width: 500px; height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+        
+        .logo { width: 150px; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)); animation: float 4s ease-in-out infinite; mix-blend-mode: screen; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+
+        h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; text-transform: lowercase; }
+        h2 { font-size: clamp(0.8rem, 2vw, 1rem); font-weight: 300; letter-spacing: 4px; color: #ccc; margin-bottom: 30px; text-transform: uppercase; }
+        
+        .action-buttons { display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; max-width: 250px; }
+        .explore-btn { padding: 15px 40px; border-radius: 30px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.5); color: #fff; font-size: 1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; width: 100%; border: none; }
+        .explore-btn:hover { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
+
+        .discord-btn { padding: 12px 30px; border-radius: 30px; background: rgba(88, 101, 242, 0.15); border: 1px solid rgba(88, 101, 242, 0.5); color: #fff; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; text-decoration: none; width: 100%; text-align: center; }
+        .discord-btn:hover { background: #5865F2; color: #fff; box-shadow: 0 0 20px rgba(88, 101, 242, 0.6); }
+
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-header p { color: #aaa; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; font-weight: 600; }
+
+        #releases-view, #about-view { align-items: flex-start; padding-top: 120px; padding-bottom: 80px; }
+        .releases-container, .about-container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        .releases-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; }
+        .release-card { padding: 20px; transition: transform 0.3s ease; display: flex; flex-direction: column; justify-content: space-between; }
+        .release-card:hover { transform: translateY(-5px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .release-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .release-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; color: #fff; line-height: 1.3; }
+        
+        .play-btn { width: 100%; padding: 12px; border-radius: 30px; background: #1DB954; color: #000; font-weight: 800; text-align: center; text-decoration: none; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; border: none; display: block; margin-top: 15px; }
+        .play-btn:hover { background: #1ed760; box-shadow: 0 0 20px rgba(29, 185, 84, 0.4); color: #000; }
+
+        .about-card { padding: 50px 40px; text-align: center; }
+        .about-card h3 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; color: #fff; }
+        .about-text { font-size: 1rem; color: #ccc; line-height: 1.8; margin-bottom: 20px; text-align: justify; text-align-last: center; }
+        .about-text strong { color: #fff; font-weight: 700; }
+
+        /* === FORMS (DEMO, LOGIN, ADMIN) === */
+        .submission-container { width: 100%; max-width: 500px; padding: 0; overflow: hidden; display: flex; flex-direction: column; margin: auto; }
+        
+        .ticker-wrap { width: 100%; color: #000; padding: 10px 0; font-weight: bold; letter-spacing: 2px; white-space: nowrap; overflow: hidden; border-bottom: 1px solid rgba(0,0,0,0.5); border-radius: 20px 20px 0 0; transition: background-color 0.4s ease; }
+        .ticker { display: inline-block; padding-left: 100%; animation: ticker-anim 15s linear infinite; }
+        @keyframes ticker-anim { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        
+        .form-content { padding: 30px; }
+        .form-content h2 { text-align: center; color: #fff; font-size: clamp(1.2rem, 4vw, 1.8rem); margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .form-group { flex: 1; display: flex; flex-direction: column; min-width: 150px; }
+        label { font-size: 0.75rem; color: #aaa; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, textarea { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); padding: 12px; border-radius: 8px; color: #fff; outline: none; font-family: inherit; font-size: 16px; transition: all 0.3s ease; width: 100%; }
+        input:focus, textarea:focus { border: 1px solid rgba(255, 255, 255, 0.6); background: rgba(0, 0, 0, 0.6); }
+        input:disabled, textarea:disabled { opacity: 0.4; cursor: not-allowed; border: 1px solid rgba(255,255,255,0.05); }
+        textarea { resize: vertical; min-height: 80px; }
+
+        .password-container { position: relative; display: flex; align-items: center; }
+        .password-container input { padding-right: 45px; }
+        .eye-btn { position: absolute; right: 10px; background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; padding: 5px; outline: none; }
+        .eye-btn:hover { color: #fff; }
+
+        /* === ADMIN DASHBOARD STYLES === */
+        #admin-view { align-items: flex-start; padding-top: 120px; padding-bottom: 80px; }
+        .admin-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; width: 100%; max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        .admin-card { padding: 30px; display: flex; flex-direction: column; gap: 15px; }
+        .admin-card h3 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; color: #1DB954; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        
+        .add-artist-btn { background: transparent; border: 1px dashed rgba(255,255,255,0.4); color: #aaa; padding: 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; width: 100%; margin-bottom: 15px; }
+        .add-artist-btn:hover { border-color: #fff; color: #fff; }
+
+        .link-generator-result { background: rgba(0,0,0,0.6); border: 1px solid #1DB954; padding: 15px; border-radius: 8px; color: #1DB954; font-family: monospace; font-size: 0.8rem; word-break: break-all; text-align: center; display: none; margin-top: 15px; }
+
+        /* === MOBILE RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            nav { 
+                top: 0; 
+                width: 100%; 
+                max-width: 100%; 
+                padding: 15px 10px; 
+                gap: 10px; 
+                display: flex;
+                flex-wrap: nowrap; /* Forces single line */
+                overflow-x: auto;  /* Allows side-scrolling */
+                justify-content: flex-start; 
+                background: rgba(0, 0, 0, 0.9);
+                backdrop-filter: blur(15px);
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+            }
+            /* Hides the scrollbar for a clean look */
+            nav::-webkit-scrollbar { display: none; }
+            nav { -ms-overflow-style: none; scrollbar-width: none; }
+            
+            /* Prevents buttons from shrinking or wrapping */
+            .nav-btn { flex: 0 0 auto; padding: 10px 15px; font-size: 0.75rem; }
+            .page-view { justify-content: flex-start !important; align-items: center; }
+
+            /* Added extra top padding so the new nav bar doesn't cover content */
+            #home-view, #releases-view, #about-view, #demo-view, #login-view, #admin-view { 
+                flex-direction: column; justify-content: flex-start !important; 
+                padding: 100px 15px 80px 15px; 
+                gap: 25px; height: auto; min-height: 100%; 
+            }
+            
+            .center-panel, .side-panel { width: 100%; height: auto; margin-top: 0; padding: 30px 20px; }
+            .center-panel { order: -1; }
+            
+            .submission-container { width: 92%; margin: 0 auto; }
+            .form-content { padding: 20px 15px; }
+            .form-row { flex-direction: column; gap: 15px; }
+            .about-card { padding: 40px 20px; }
+            
+            .releases-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .release-card { padding: 10px; }
+            .release-card img { margin-bottom: 8px; border-radius: 8px; }
+            .release-card h3 { font-size: 0.85rem; letter-spacing: 0.5px; }
+            .play-btn { padding: 8px; font-size: 0.7rem; margin-top: 10px; letter-spacing: 1px; }
+
+            .admin-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="space"></canvas>
+
+    <nav>
+        <button class="nav-btn active" onclick="switchPage('home')">Home</button>
+        <button class="nav-btn" onclick="switchPage('about')">About</button>
+        <button class="nav-btn" onclick="switchPage('releases')">Releases</button>
+        <button class="nav-btn" onclick="switchPage('demo')">Demo Submission</button>
+        <button class="nav-btn" onclick="switchPage('login')">Admin</button>
+    </nav>
+
+    <div id="home-view" class="page-view active">
+        <div class="glass-panel side-panel">
+            <h3 style="margin-bottom: 15px; font-weight: 300; letter-spacing: 1px; color: #fff;">LATEST</h3>
+            <iframe style="border-radius:12px; margin-bottom: 15px;" src="https://open.spotify.com/embed/playlist/2FsVo8L1FRNUSab69KvjbJ?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            <p style="font-size: 0.8rem; color: #aaa; line-height: 1.4;">Stream the newest drops and underground anthems directly from the inertia catalog.</p>
+        </div>
+
+        <div class="glass-panel center-panel">
+            <img src="logo.webp" alt="inertia Logo" class="logo">
+            <h1>inertia</h1>
+            <h2>BY ARTISTS, FOR ARTISTS</h2>
+            <div class="action-buttons">
+                <button class="explore-btn" onclick="switchPage('releases')">Explore</button>
+                <a href="https://discord.gg/xnQ3ej7zWZ" target="_blank" class="discord-btn">Join Discord</a>
+            </div>
+        </div>
+
+        <div class="glass-panel side-panel">
+            <h3 style="margin-bottom: 15px; font-weight: 300; letter-spacing: 1px; color: #fff;">ROSTER</h3>
+            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 15px; line-height: 1.4;">Join the elite tier of producers pushing the boundaries of Phonk and Funk.</p>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); height: 120px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <button class="nav-btn" style="background: transparent; border-color: rgba(255,255,255,0.3);" onclick="switchPage('demo')">Submit Demo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="about-view" class="page-view">
+        <div class="about-container">
+            <div class="glass-panel about-card">
+                <img src="logo.webp" alt="inertia Logo" style="width: 80px; margin-bottom: 20px; mix-blend-mode: screen;">
+                <h3>The Future of Sound</h3>
+                <p class="about-text">
+                    <strong>inertia</strong> is a multi-genre imprint dedicated to the rawest sounds of the underground. 
+                    Specializing heavily in Brazilian Funk and Phonk, we exist to amplify artists who break the mold and refuse to conform to algorithmic standards.
+                </p>
+                <p class="about-text">
+                    Founded by producers, for producers. We understand the grind of the independent scene because we live it. We know what it takes to cut through the noise, and our mission is to provide a platform that elevates authentic, boundary-pushing electronic music.
+                </p>
+                <p class="about-text">
+                    We aren't just signing tracks; we are building a movement. If your sound hits hard and shifts the culture, this is your home.
+                </p>
+                <button class="explore-btn" style="margin-top: 20px; width: auto;" onclick="switchPage('demo')">Submit A Demo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="releases-view" class="page-view">
+        <div class="releases-container">
+            <div class="page-header"><p>The inertia discography</p></div>
+            <div class="releases-grid" id="spotify-grid"></div>
+        </div>
+    </div>
+
+    <div id="demo-view" class="page-view">
+        <div class="glass-panel submission-container">
+            <div id="demo-ticker-wrap" class="ticker-wrap"><div id="demo-ticker-text" class="ticker"></div></div>
+            <div class="form-content">
+                <h2>DEMO SUBMISSION</h2>
+                <form id="demoForm">
+                    <fieldset id="demo-fieldset" style="border: none; padding: 0; margin: 0;">
+                        <div class="form-row">
+                            <div class="form-group"><label>Artist Name</label><input type="text" id="artistName" placeholder="Name" required></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Email</label><input type="email" id="artistEmail" placeholder="you@domain.com" required></div>
+                            <div class="form-group"><label>Genre</label><input type="text" id="artistGenre" placeholder="Brazilian Funk, Phonk, etc." required></div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label>Private Link (SoundCloud / Drive)</label><input type="url" id="demoLink" placeholder="https://" required style="margin-bottom: 20px;">
+                            <label>Your Message</label><textarea id="demoMessage" placeholder="Tell us about the track..."></textarea>
+                        </div>
+                        <button type="submit" id="demo-submit-btn" class="explore-btn" style="width: 100%;">Submit Demo</button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-view" class="page-view">
+        <div class="glass-panel submission-container" style="max-width: 400px; margin: auto;">
+            <div class="ticker-wrap" style="background-color: #555;"><div class="ticker">/// AUTHENTICATION REQUIRED ///</div></div>
+            <div class="form-content">
+                <h2>ADMIN LOGIN</h2>
+                <form id="loginForm">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>Admin ID</label>
+                        <input type="text" id="adminId" placeholder="Identification" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label>Passcode</label>
+                        <div class="password-container">
+                            <input type="password" id="adminPass" placeholder="••••••••" required>
+                            <button type="button" class="eye-btn" id="toggleEye">👁️</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="explore-btn" style="width: 100%; border: 1px solid rgba(255,255,255,0.5);">Authenticate</button>
+                    <p id="login-error" style="color: #d82c2c; font-size: 0.8rem; text-align: center; margin-top: 15px; display: none;">ACCESS DENIED. INVALID CREDENTIALS.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-view" class="page-view">
+        <div class="admin-layout">
+            
+            <div class="glass-panel admin-card">
+                <h3>Recording Agreement Generator</h3>
+                <p style="font-size: 0.8rem; color: #aaa;">Generates a smart-link that pre-fills the contract. Label share is locked at 50%.</p>
+                
+                <form id="agreementForm">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Release Title</label>
+                        <input type="text" id="agrTitle" placeholder="Song Name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Release Date</label>
+                            <input type="date" id="agrDate" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>License Commencing</label>
+                            <input type="date" id="agrCommenceDate" required>
+                        </div>
+                    </div>
+                    
+                    <label>Artists & Splits (Remaining 50%)</label>
+                    <div id="agreementArtistsContainer">
+                        <div class="form-row" style="margin-bottom: 10px; align-items: center;">
+                            <div class="form-group"><input type="text" class="agr-artist-name" placeholder="Artist Name" required></div>
+                            <div class="form-group" style="max-width: 100px;"><input type="number" class="agr-artist-share" placeholder="Share %" max="50" required></div>
+                            <button type="button" style="background: none; border: none; color: #d82c2c; font-size: 1.5rem; cursor: pointer; padding: 0 10px; line-height: 1;" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-artist-btn" onclick="addArtistField('agreementArtistsContainer', true)">+ Add Another Artist</button>
+
+                    <button type="submit" class="explore-btn" style="width: 100%; border: 1px solid rgba(255,255,255,0.5);">Generate Link</button>
+                </form>
+                <div id="agreementLinkBox" class="link-generator-result"></div>
+            </div>
+
+            <div class="glass-panel admin-card">
+                <h3>AI Usage Clearance Generator</h3>
+                <p style="font-size: 0.8rem; color: #aaa;">Generates a secure link for artists to upload tool documentation and ownership proof.</p>
+                
+                <form id="aiClearanceForm">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Song Title</label>
+                        <input type="text" id="aiTitle" placeholder="Song Name" required>
+                    </div>
+                    
+                    <label>Involved Artists</label>
+                    <div id="aiArtistsContainer">
+                        <div class="form-row" style="margin-bottom: 10px; align-items: center;">
+                            <div class="form-group"><input type="text" class="ai-artist-name" placeholder="Artist Name" required></div>
+                            <button type="button" style="background: none; border: none; color: #d82c2c; font-size: 1.5rem; cursor: pointer; padding: 0 10px; line-height: 1;" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-artist-btn" onclick="addArtistField('aiArtistsContainer', false)">+ Add Another Artist</button>
+
+                    <button type="submit" class="explore-btn" style="width: 100%; border: 1px solid rgba(255,255,255,0.5);">Generate Link</button>
+                </form>
+                <div id="aiLinkBox" class="link-generator-result"></div>
+            </div>
+
+            <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 20px;">
+                <button class="explore-btn" style="width: auto; background: rgba(216, 44, 44, 0.2); border: 1px solid #d82c2c; color: #fff;" onclick="logout()">Disconnect System</button>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        // ==========================================
+        // SECURITY VAULT
+        // ==========================================
+        const ENCRYPTED_APP_URL = "LDExIDMIGB9HUUJZRzBrIj8vVVtVGlFfXRgpJCYiL0EYQxtze1ZOJycyByxeX0dCfF5hRCgpKil0SllaZQdzfEQnLiBgdgBzSlNaUntZNyggOXAKZVdEbWdKViUkE2cQYXFpAmtSWVA1EiI9Jx1SSFFR"; 
+        const ADMIN_USERNAME = "oguri"; 
+        const SUBMISSIONS_OPEN = true; 
+
+        // ==========================================
+        // DYNAMIC CATALOG ENGINE (GOOGLE SHEETS)
+        // ==========================================
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQS6eY09DLUI2oCebHu7VIKymWBvqcclmgZhYvV-_SEaPNCjUuLyoPsgYR9X_IqfSScjq5dzvruA6O2/pub?gid=0&single=true&output=csv"; 
+        const CACHE_EXPIRATION_MS = 60 * 60 * 1000; // Refreshes for new tracks every 1 hour
+
+        async function fetchWithProxyFallback(targetUrl) {
+            // Dual Proxy routing for 99.9% uptime
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+            ];
+            
+            for (let proxy of proxies) {
+                try {
+                    let res = await fetch(proxy, { cache: "no-store" });
+                    if (res.ok) return await res.text();
+                } catch (e) {
+                    console.warn("Primary proxy failed, routing to backup...");
+                }
+            }
+            throw new Error("All database proxies unreachable.");
+        }
+
+        async function getSpotifyLinks() {
+            const cachedData = localStorage.getItem('inertia_catalog_csv');
+            const cacheTimestamp = localStorage.getItem('inertia_catalog_time');
+            
+            // Check if we have a fresh cache
+            if (cachedData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_EXPIRATION_MS)) {
+                return JSON.parse(cachedData);
+            }
+
+            try {
+                const csvText = await fetchWithProxyFallback(SHEET_CSV_URL);
+                // Extract links, ignoring empty rows
+                const links = csvText.split('\n').map(row => row.trim()).filter(row => row.startsWith('http'));
+                
+                // Save to local cache
+                localStorage.setItem('inertia_catalog_csv', JSON.stringify(links));
+                localStorage.setItem('inertia_catalog_time', Date.now());
+                return links;
+            } catch (error) {
+                console.error("Database sync failed:", error);
+                // If offline, fall back to old cache even if it is expired
+                if (cachedData) return JSON.parse(cachedData);
+                return [];
+            }
+        }
+
+        async function renderReleases() {
+            const grid = document.getElementById('spotify-grid');
+            if (grid.innerHTML !== '') return; 
+            
+            grid.innerHTML = '<p style="color:#aaa; text-align:center; width:100%; grid-column: 1/-1; font-weight: bold; letter-spacing: 2px;">SYNCING CATALOG...</p>';
+            
+            const links = await getSpotifyLinks();
+            grid.innerHTML = ''; 
+
+            if (links.length === 0) {
+                grid.innerHTML = '<p style="color:#aaa; text-align:center; width:100%; grid-column: 1/-1;">No releases found in database.</p>';
+                return;
+            }
+
+            // Concurrent fetching: Loads all tracks simultaneously instead of one-by-one
+            const trackPromises = links.map(async (link) => {
+                const trackCacheKey = 'spotify_track_' + btoa(link);
+                let trackData = localStorage.getItem(trackCacheKey);
+                
+                // Tier 2 Cache: Individual Track Metadata
+                if (trackData) {
+                    return { link, data: JSON.parse(trackData) };
+                } else {
+                    try {
+                        const oembedUrl = `https://open.spotify.com/oembed?url=${encodeURIComponent(link)}`;
+                        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(oembedUrl)}`;
+                        const response = await fetch(proxyUrl);
+                        const rawData = await response.json();
+                        const parsedData = JSON.parse(rawData.contents);
+                        
+                        // Save track art and titles permanently so returning fans load instantly
+                        localStorage.setItem(trackCacheKey, JSON.stringify(parsedData));
+                        return { link, data: parsedData };
+                    } catch (error) {
+                        console.error("Could not load metadata for: ", link);
+                        return null;
+                    }
+                }
+            });
+
+            const resolvedTracks = await Promise.all(trackPromises);
+
+            resolvedTracks.forEach(item => {
+                if (!item) return; // Skips dead/broken links gracefully
+                const card = document.createElement('div');
+                card.className = 'glass-panel release-card';
+                card.innerHTML = `
+                    <div>
+                        <img src="${item.data.thumbnail_url}" alt="Cover Art">
+                        <h3>${item.data.title}</h3>
+                    </div>
+                    <a href="${item.link}" target="_blank" class="play-btn">Listen Now</a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function initDemoState() {
+            const tickerWrap = document.getElementById('demo-ticker-wrap');
+            const tickerText = document.getElementById('demo-ticker-text');
+            const fieldset = document.getElementById('demo-fieldset');
+            const submitBtn = document.getElementById('demo-submit-btn');
+
+            if (SUBMISSIONS_OPEN) {
+                tickerWrap.style.backgroundColor = '#1DB954';
+                tickerText.innerText = '/// SUBMISSIONS CURRENTLY OPEN /// DROP YOUR HEAVIEST CUTS /// inertia ///';
+                fieldset.disabled = false;
+                submitBtn.innerText = 'Submit Demo';
+            } else {
+                tickerWrap.style.backgroundColor = '#d82c2c';
+                tickerText.innerText = '/// SUBMISSIONS CURRENTLY CLOSED /// NO NEW DEMOS ACCEPTED /// inertia ///';
+                fieldset.disabled = true;
+                submitBtn.innerText = 'System Locked';
+            }
+        }
+        initDemoState();
+
+        function switchPage(page) {
+            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(page + '-view').classList.add('active');
+            
+            const btns = document.querySelectorAll('.nav-btn');
+            if (page === 'home') btns[0].classList.add('active');
+            if (page === 'about') btns[1].classList.add('active');
+            if (page === 'releases') { btns[2].classList.add('active'); renderReleases(); }
+            if (page === 'demo') btns[3].classList.add('active');
+            if (page === 'login' || page === 'admin') btns[4].classList.add('active');
+            
+            document.getElementById(page + '-view').scrollTop = 0;
+        }
+        // --- SILENT MAIL API FOR DEMO SUBMISSIONS ---
+        document.getElementById('demoForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const name = document.getElementById('artistName').value;
+            const email = document.getElementById('artistEmail').value;
+            const genre = document.getElementById('artistGenre').value;
+            const link = document.getElementById('demoLink').value;
+            const message = document.getElementById('demoMessage').value;
+            const btn = document.getElementById('demo-submit-btn');
+
+            btn.innerText = 'SENDING...';
+            btn.style.opacity = '0.5';
+
+            fetch("https://formsubmit.co/ajax/demo@inertia.cv", {
+                method: "POST",
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    _subject: `Demo: ${name} - ${genre}`,
+                    Artist_Name: name,
+                    Email: email,
+                    Genre: genre,
+                    Link: link,
+                    Message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerText = 'DEMO SENT ✓';
+                btn.style.background = '#1DB954';
+                btn.style.color = '#000';
+                btn.style.opacity = '1';
+                e.target.reset();
+                setTimeout(() => {
+                    btn.innerText = 'Submit Demo';
+                    btn.style.background = 'rgba(255, 255, 255, 0.1)';
+                    btn.style.color = '#fff';
+                }, 4000);
+            })
+            .catch(error => {
+                btn.innerText = 'ERROR. TRY AGAIN.';
+                btn.style.background = '#d82c2c';
+                setTimeout(() => { btn.innerText = 'Submit Demo'; }, 3000);
+            });
+        });
+
+        document.getElementById('toggleEye').addEventListener('click', function() {
+            const passInput = document.getElementById('adminPass');
+            if (passInput.type === 'password') { passInput.type = 'text'; this.innerText = '🙈'; } 
+            else { passInput.type = 'password'; this.innerText = '👁️'; }
+        });
+
+        // --- ENCRYPTED LOGIN AUTHENTICATION ---
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('adminId').value.trim();
+            const pass = document.getElementById('adminPass').value.trim();
+
+            if (user === 'CREATE_KEY') {
+                let url = prompt("SECURE SETUP: Paste your clean Google Web App URL here (ending in /exec):");
+                if(url) {
+                    let scrambled = "";
+                    for(let i=0; i<url.length; i++) {
+                        scrambled += String.fromCharCode(url.charCodeAt(i) ^ pass.charCodeAt(i % pass.length));
+                    }
+                    prompt("SETUP COMPLETE. Copy this Encrypted String and paste it into ENCRYPTED_APP_URL in your code:", btoa(scrambled));
+                }
+                return;
+            }
+
+            if (user === ADMIN_USERNAME) {
+                try {
+                    let decoded = atob(ENCRYPTED_APP_URL);
+                    let decryptedUrl = "";
+                    for(let i=0; i<decoded.length; i++) {
+                        decryptedUrl += String.fromCharCode(decoded.charCodeAt(i) ^ pass.charCodeAt(i % pass.length));
+                    }
+
+                    // FIX: Forcefully trim the URL to prevent "Error 400 Bad Request" from invisible spaces
+                    let cleanUrl = decryptedUrl.trim();
+
+                    if (cleanUrl.startsWith("https://script.google.com")) {
+                        window.activePortalUrl = cleanUrl; 
+                        document.getElementById('login-error').style.display = 'none';
+                        document.getElementById('adminId').value = '';
+                        document.getElementById('adminPass').value = '';
+                        switchPage('admin');
+                    } else {
+                        throw "Invalid Password";
+                    }
+                } catch(err) {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        });
+
+        function logout() { 
+            window.activePortalUrl = null; 
+            switchPage('home'); 
+        }
+        function addArtistField(containerId, includeShare) {
+            const container = document.getElementById(containerId);
+            const row = document.createElement('div');
+            row.className = 'form-row';
+            row.style.marginBottom = '10px';
+            row.style.alignItems = 'center';
+            let classPrefix = containerId === 'agreementArtistsContainer' ? 'agr' : 'ai';
+            let html = `<div class="form-group"><input type="text" class="${classPrefix}-artist-name" placeholder="Artist Name" required></div>`;
+            if(includeShare) { html += `<div class="form-group" style="max-width: 100px;"><input type="number" class="${classPrefix}-artist-share" placeholder="Share %" max="50" required></div>`; }
+            html += `<button type="button" style="background: none; border: none; color: #d82c2c; font-size: 1.5rem; cursor: pointer; padding: 0 10px; line-height: 1;" onclick="this.parentElement.remove()">×</button>`;
+            row.innerHTML = html;
+            container.appendChild(row);
+        }
+
+        document.getElementById('agreementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const rawTitle = document.getElementById('agrTitle').value;
+            const title = encodeURIComponent(rawTitle);
+            const date = encodeURIComponent(document.getElementById('agrDate').value);
+            const commenceDate = encodeURIComponent(document.getElementById('agrCommenceDate').value);
+            const artistInputs = document.querySelectorAll('.agr-artist-name');
+            const shareInputs = document.querySelectorAll('.agr-artist-share');
+            let namesData = []; let splitsData = [];
+            
+            for(let i = 0; i < artistInputs.length; i++) {
+                namesData.push(artistInputs[i].value);
+                splitsData.push(`${artistInputs[i].value} (${shareInputs[i].value}%)`);
+            }
+            const artistsParam = encodeURIComponent(namesData.join(', '));
+            const splitsParam = encodeURIComponent(splitsData.join(', '));
+            
+            const finalUrl = `${window.activePortalUrl}?type=agreement&title=${title}&date=${date}&commenceDate=${commenceDate}&artists=${artistsParam}&splits=${splitsParam}`;
+            
+            const linkBox = document.getElementById('agreementLinkBox');
+            linkBox.style.display = 'block'; linkBox.style.background = 'transparent'; linkBox.style.border = 'none'; linkBox.style.padding = '0';
+            
+            const linkCard = `
+                <div style="background: rgba(0,0,0,0.6); border: 1px solid #1DB954; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left;">
+                    <strong style="color: #fff; display: block; margin-bottom: 8px; font-family: 'Helvetica Neue', Arial, sans-serif;">📑 ${rawTitle}</strong>
+                    <input type="text" value="${finalUrl}" readonly style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #1DB954; font-size: 0.75rem; border-radius: 4px; margin-bottom: 8px; outline: none;">
+                    <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerText='✓ COPIED'; setTimeout(() => this.innerText='COPY LINK', 2000);" style="background: #1DB954; color: #000; border: none; padding: 8px 15px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s;">Copy Link</button>
+                </div>`;
+            linkBox.insertAdjacentHTML('afterbegin', linkCard);
+            e.target.reset();
+            document.getElementById('agreementArtistsContainer').innerHTML = `<div class="form-row" style="margin-bottom: 10px; align-items: center;"><div class="form-group"><input type="text" class="agr-artist-name" placeholder="Artist Name" required></div><div class="form-group" style="max-width: 100px;"><input type="number" class="agr-artist-share" placeholder="Share %" max="50" required></div><button type="button" style="background: none; border: none; color: #d82c2c; font-size: 1.5rem; cursor: pointer; padding: 0 10px; line-height: 1;" onclick="this.parentElement.remove()">×</button></div>`;
+        });
+
+        document.getElementById('aiClearanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const rawTitle = document.getElementById('aiTitle').value;
+            const title = encodeURIComponent(rawTitle);
+            const artistInputs = document.querySelectorAll('.ai-artist-name');
+            let artistsData = [];
+            for(let i = 0; i < artistInputs.length; i++) { artistsData.push(artistInputs[i].value); }
+            const artistsParam = encodeURIComponent(artistsData.join(', '));
+            
+            const finalUrl = `${window.activePortalUrl}?type=ai&title=${title}&artists=${artistsParam}`;
+            
+            const linkBox = document.getElementById('aiLinkBox');
+            linkBox.style.display = 'block'; linkBox.style.background = 'transparent'; linkBox.style.border = 'none'; linkBox.style.padding = '0';
+            
+            const linkCard = `
+                <div style="background: rgba(0,0,0,0.6); border: 1px solid #1DB954; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left;">
+                    <strong style="color: #fff; display: block; margin-bottom: 8px; font-family: 'Helvetica Neue', Arial, sans-serif;">🤖 ${rawTitle}</strong>
+                    <input type="text" value="${finalUrl}" readonly style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #1DB954; font-size: 0.75rem; border-radius: 4px; margin-bottom: 8px; outline: none;">
+                    <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerText='✓ COPIED'; setTimeout(() => this.innerText='COPY LINK', 2000);" style="background: #1DB954; color: #000; border: none; padding: 8px 15px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s;">Copy Link</button>
+                </div>`;
+            linkBox.insertAdjacentHTML('afterbegin', linkCard);
+            e.target.reset();
+            document.getElementById('aiArtistsContainer').innerHTML = `<div class="form-row" style="margin-bottom: 10px; align-items: center;"><div class="form-group"><input type="text" class="ai-artist-name" placeholder="Artist Name" required></div><button type="button" style="background: none; border: none; color: #d82c2c; font-size: 1.5rem; cursor: pointer; padding: 0 10px; line-height: 1;" onclick="this.parentElement.remove()">×</button></div>`;
+        });
+
+        const canvas = document.getElementById("space");
+        const c = canvas.getContext("2d");
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        window.addEventListener('resize', () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; });
+
+        class Star {
+            constructor() { this.x = Math.random() * width - width / 2; this.y = Math.random() * height - height / 2; this.z = Math.random() * width; this.pz = this.z; }
+            update() { this.z -= 8; if (this.z < 1) { this.z = width; this.x = Math.random() * width - width / 2; this.y = Math.random() * height - height / 2; this.pz = this.z; } }
+            draw() {
+                let sx = (this.x / this.z) * width + width / 2; let sy = (this.y / this.z) * height + height / 2; let r = width / this.z; let px = (this.x / this.pz) * width + width / 2; let py = (this.y / this.pz) * height + height / 2; this.pz = this.z;
+                c.beginPath(); c.strokeStyle = "rgba(255, 255, 255, " + (1 - this.z / width) + ")"; c.lineWidth = r * 0.8; c.moveTo(px, py); c.lineTo(sx, sy); c.stroke();
+            }
+        }
+        let stars = []; for (let i = 0; i < 600; i++) { stars.push(new Star()); }
+        function animate() { requestAnimationFrame(animate); c.fillStyle = "rgba(0, 0, 0, 0.3)"; c.fillRect(0, 0, width, height); for (let s of stars) { s.update(); s.draw(); } }
+        animate();
+    </script>
+</body>
+</html>
